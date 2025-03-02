@@ -12,8 +12,33 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 # ✅ Streamlit UI
-st.title("📈 SEC Filing Analysis RAG Chatbot")
-st.write("Upload a 10-K filing and ask: 'Give me potential reasons the stock will go up or down after reading this file.'")
+st.title("💸 AI-Powered SEC Filing Detective 🕵️‍♂️")
+st.write("Upload a 10-K filing and let this chatbot do the reading for you. Just ask: 'Will this stock 🚀 or 📉?'")
+
+# ✅ About
+st.write("### ℹ️ About")
+st.write("Welcome to the **SEC Filing Analysis RAG Chatbot** where serious finance meets questionable humor. 🚀")
+
+st.write("This chatbot is designed to read 10-K filings so you don’t have to. Ask it why a stock might go 🚀 or 📉 after reading financial statements.")
+
+st.write("#### 🎭 Pick a Character for Fun")
+character_name = st.text_input("Enter your character name:")
+
+if st.button("Pick a Character"):
+    character_name = character_name.strip().lower()
+    
+    character_responses = {
+        "spongebob": "Spongebob is a yellow sponge who lives in a pineapple under the sea. \nAlso, he works for free at the Krusty Krab—just like an unpaid intern.",
+        "patrick": "Patrick Star is a professional rock dweller. His financial advice? 'Just don’t spend money.' Genius. 💰",
+        "nezha": "我命由我不由天！ (Translation: I control my own destiny, not the heavens! Also, I refuse to pay taxes.)",
+        "elon musk": "Elon Musk: Likes rockets, AI, and tweeting at 3 AM. SEC filings? He prefers making headlines instead. 🚀",
+        "batman": "Batman doesn’t read SEC filings—he **owns** the companies filing them. Also, no parents. 😢",
+        "rick sanchez": "Rick: '10-K filings? Pfft. Just invest in interdimensional markets, Morty!' 🤯",
+        "shrek": "Shrek: 'This chatbot is like an onion—it has layers. Also, I don’t do stocks, I do **swamps**.' 🧅",
+        "default": "Hmm... I don't know that character. Maybe they’re off trading crypto?"
+    }
+    
+    st.write(character_responses.get(character_name, character_responses["default"]))
 
 # ✅ Load the LLM Model
 llm = Ollama(
