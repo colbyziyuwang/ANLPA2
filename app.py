@@ -27,12 +27,34 @@ def extract_filing_date(file_path):
     return None
 
 # ✅ Initialize Streamlit Session State for Persistence
-for key in ["filing_date", "file_path", "analyze_stock"]:
+for key in ["filing_date", "file_path", "analyze_stock", "chatbot_response"]:
     if key not in st.session_state:
         st.session_state[key] = None
 
 # ✅ Streamlit UI
 st.title("💸 AI-Powered SEC Filing Detective 🕵️‍♂️")
+
+# ✅ About
+st.write("### ℹ️ About")
+st.write("Welcome to the **SEC Filing Analysis RAG Chatbot**, where serious finance meets questionable humor. 🚀")
+
+st.write("This chatbot reads 10-K and DEF 14A filings so you don’t have to. Ask it why a stock might go 🚀 or 📉 after reading financial statements.")
+
+# ✅ Fun Character Picker
+st.write("#### 🎭 Pick a Character for Fun")
+character_name = st.text_input("Enter your character name:")
+if st.button("Pick a Character"):
+    character_responses = {
+        "spongebob": "Spongebob: Works for free, like an unpaid intern. 🧽",
+        "patrick": "Patrick: Financial advice? 'Just don’t spend money.' Genius. 💰",
+        "nezha": "Nezha: 我命由我不由天！(Translation: I control my own destiny, not the heavens!)",
+        "elon musk": "Elon Musk: Likes rockets, AI, and tweeting at 3 AM. 🚀",
+        "batman": "Batman: He doesn’t read SEC filings—he **owns** the companies filing them. 😢",
+        "rick sanchez": "Rick Sanchez: '10-K filings? Pfft. Just invest in interdimensional markets, Morty!' 🤯",
+        "shrek": "Shrek: 'This chatbot is like an onion—it has layers. Also, I don’t do stocks, I do **swamps**.' 🧅",
+        "default": "Hmm... I don't know that character. Maybe they’re off trading crypto?"
+    }
+    st.write(character_responses.get(character_name.strip().lower(), character_responses["default"]))
 
 # ✅ Model Selection
 st.write("### 🤖 Choose Your AI Assistant (Free Ollama Models)")
@@ -91,11 +113,23 @@ if st.session_state.filing_date:
 st.write("### 💬 AI Chat with SEC Filing Data")
 
 if st.session_state.filing_date and st.session_state.file_path:
-    user_query = st.text_input(
-        "Ask a question about the SEC filing:",
-        "Give me potential reasons the stock will go up or down. "
-        "Give a score between -1 and 1 to indicate decreasing to increasing."
-    )
+    # ✅ Different Queries for 10-K vs. DEF 14A
+    if filing_type == "10-K":
+        default_query = (
+            "Analyze this 10-K filing and identify both positive and negative signals that may impact the stock price. "
+            "Consider revenue growth, profitability, debt levels, risk disclosures, new business strategies, and industry trends. "
+            "Provide a score between 0 (strong negative impact) and 1 (strong positive impact), ensuring a neutral perspective by weighing both positive and negative aspects. "
+            "Explain the key reasons behind the score."
+        )
+    else:  # DEF 14A (Proxy Statements)
+        default_query = (
+            "Analyze this DEF 14A proxy statement and determine its potential impact on investor sentiment. "
+            "Consider executive compensation, board structure, shareholder proposals, voting outcomes, and corporate governance policies. "
+            "Provide a score between 0 (strong negative impact) and 1 (strong positive impact), ensuring a neutral perspective by weighing both positive and negative aspects. "
+            "Explain the key reasons behind the score."
+        )
+
+    user_query = st.text_input("Ask a question about the SEC filing:", default_query)
 
     if st.button("Analyze SEC Filing"):
         docs = SimpleDirectoryReader(input_files=[st.session_state.file_path]).load_data()
@@ -108,8 +142,14 @@ if st.session_state.filing_date and st.session_state.file_path:
         query_engine = RetrieverQueryEngine(retriever=retriever)
 
         response = query_engine.query(user_query)
+        st.session_state.chatbot_response = response.response  # ✅ Store chatbot response
         st.subheader("📊 RAG Response:")
-        st.write(response.response)
+        st.write(st.session_state.chatbot_response)
+
+# ✅ Display Previous Chatbot Response (Even After Clicking "Analyze Stock")
+if st.session_state.chatbot_response:
+    st.subheader("📊 RAG Response (Persisted):")
+    st.write(st.session_state.chatbot_response)
 
 # ✅ Stock Price Analysis
 st.write("### 📈 Stock Price Analysis")
@@ -156,5 +196,3 @@ if st.session_state.filing_date:
                     st.error("Filing date not found in the dataset.")
         else:
             st.error(f"❌ No stock data file found for CIK: {cik}.")
-else:
-    st.warning("⚠️ No filing date available. Please search for SEC filings first.")
