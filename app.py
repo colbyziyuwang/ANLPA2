@@ -56,6 +56,42 @@ if st.button("Pick a Character"):
     }
     st.write(character_responses.get(character_name.strip().lower(), character_responses["default"]))
 
+# ✅ Initialize Session State to Persist Data
+if "show_analysis" not in st.session_state:
+    st.session_state.show_analysis = False
+
+# ✅ Button to Toggle All Analysis (Plots + Stats)
+if st.button("📊 Show Stock Price Change Analysis & Statistics"):
+    st.session_state.show_analysis = not st.session_state.show_analysis
+
+if st.session_state.show_analysis:
+    st.write("### 📈 7-Day Stock Price Change Analysis & Statistics")
+
+    # ✅ Display Box Plot
+    st.write("#### 📌 Box Plot of 7-Day Stock Price Change")
+    box_plot_path = "boxplot-7-day-average-stock-price-change.png"
+    st.image(box_plot_path, caption="Box Plot of 7-Day Stock Price Change After Filing", use_container_width=True)
+
+    # ✅ Display Distribution Plot
+    st.write("#### 📌 Distribution of 7-Day Stock Price Change")
+    dist_plot_path = "distribution-7-day-average-stock-price-change.png"
+    st.image(dist_plot_path, caption="Distribution of 7-Day Stock Price Change After Filing", use_container_width=True)
+
+    # ✅ Display Descriptive Statistics
+    st.write("### 📊 Descriptive Statistics")
+    stats_summary = f"""
+    - **Mean:** {0.42:.2f}%
+    - **Median:** {0.40:.2f}%
+    - **Q1 (25th Percentile):** {-2.16:.2f}%
+    - **Q3 (75th Percentile):** {2.98:.2f}%
+    - **Interquartile Range (IQR):** {5.14:.2f}%
+    - **Standard Deviation:** {5.73:.2f}%
+    - **Coefficient of Variation (CV):** {13.68:.2f}
+    - **Skewness:** {0.27:.2f} (Indicates asymmetry of distribution)
+    - **Kurtosis:** {11.97:.2f} (Indicates tail heaviness)
+    """
+    st.markdown(stats_summary)
+
 # ✅ Model Selection
 st.write("### 🤖 Choose Your AI Assistant (Free Ollama Models)")
 available_models = ["llama3", "mistral", "phi3", "gemma", "qwen2.5", "deepseek-r1"]
