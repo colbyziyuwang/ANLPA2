@@ -175,3 +175,5 @@ cython_debug/
 # Ignore Doc2Vec model files
 sec_doc2vec.model
 sec_doc2vec.model.*
+
+.pth
