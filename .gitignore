@@ -176,4 +176,4 @@ cython_debug/
 sec_doc2vec.model
 sec_doc2vec.model.*
 
-.pth
+*.pth
