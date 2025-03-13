@@ -85,17 +85,23 @@ if st.button("Pick a Character"):
     st.write(f"**{character_name}** - Risk Tolerance: `{selected['risk']}`")
     st.write(selected["response"])
 
-    # ✅ Auto-decide based on character selection
-    if character_name in ["Nezha", "Elon Musk"]:
+# ✅ Three Decision Buttons
+st.write("### 🧐 Decision Time!")
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    if st.button("🚀 To Buy") or character_name in ["Nezha", "Elon Musk"]:
         st.session_state.show_content = False
         st.write("**I will buy it!!!!!!** 🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀")
-    
-    elif character_name == "Tang Seng":
+
+with col2:
+    if st.button("💀 To Not Buy") or character_name == "Tang Seng":
         st.session_state.show_content = False
         st.write("**I will never buy this!!!!!!** 💀💀💀💀💀💀💀💀💀💀💀💀💀💀💀💀💀💀💀💀💀💀💀💀💀")
-    
-    else:
-        st.session_state.show_content = True  # Show full UI for technical analysis
+
+with col3:
+    if st.button("📊 Technics") or (character_name not in ["Nezha", "Elon Musk"] and character_name != "Tang Seng"):
+        st.session_state.show_content = True
 
 # ✅ Show Remaining Content ONLY if "Technics" is Clicked
 if st.session_state.show_content:
