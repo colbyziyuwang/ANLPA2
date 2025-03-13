@@ -88,11 +88,11 @@ if st.button("Pick a Character"):
     # ✅ Auto-decide based on character selection
     if character_name in ["Nezha", "Elon Musk"]:
         st.session_state.show_content = False
-        st.write("I will buy it!!!!!! 🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀")
+        st.write("**I will buy it!!!!!!** 🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀")
     
     elif character_name == "Tang Seng":
         st.session_state.show_content = False
-        st.write("I will never buy this!!!!!! 💀💀💀💀💀💀💀💀💀💀💀💀💀💀💀💀💀💀💀💀💀💀💀💀💀")
+        st.write("**I will never buy this!!!!!!** 💀💀💀💀💀💀💀💀💀💀💀💀💀💀💀💀💀💀💀💀💀💀💀💀💀")
     
     else:
         st.session_state.show_content = True  # Show full UI for technical analysis
