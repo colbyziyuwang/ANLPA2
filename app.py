@@ -205,7 +205,7 @@ if st.session_state.filing_date:
             if st.session_state.analyze_stock:
                 st.write("We will plot the 7-day price of the stock starting from the filing date.")
 
-                # Load CSV data
+                # ✅ Load CSV data
                 df = pd.read_csv(stock_file_path, parse_dates=['Date'])
                 df.set_index('Date', inplace=True)
 
@@ -230,5 +230,26 @@ if st.session_state.filing_date:
                     st.pyplot(fig)
                 else:
                     st.error("Filing date not found in the dataset.")
+
+            # ✅ Model Selection for Prediction
+            st.write("### 🧠 Choose Prediction Model")
+            model_options = {
+                "stock_gru_model.pth": "Stock GRU (No Embeddings)",
+                "stock_gru_d2v.pth": "Stock GRU + Doc2Vec Embeddings"
+            }
+            model_choice = st.selectbox("Select Model for Prediction:", list(model_options.keys()), format_func=lambda x: model_options[x])
+
+            # ✅ Load Selected Model
+            if st.button("Load Model"):
+                st.session_state.selected_model = model_choice
+                st.success(f"✅ Loaded Model: `{model_options[model_choice]}`")
+
+            # ✅ Predict Using Model (if loaded)
+            if "selected_model" in st.session_state and st.session_state.selected_model:
+                st.write(f"### 📊 Predicting Stock Movement Using `{model_options[st.session_state.selected_model]}`")
+
+                # Placeholder for model inference logic
+                st.write("Model will take last 7 days of stock prices and predict the trend for the next day.")
+
         else:
             st.error(f"❌ No stock data file found for CIK: {cik}.")
