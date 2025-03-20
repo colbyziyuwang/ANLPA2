@@ -12,6 +12,25 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import re
 
+import torch
+import torch.nn as nn
+from gensim.models.doc2vec import Doc2Vec
+
+# GRU Model Definition
+class GRUStockModel(nn.Module):
+    def __init__(self, input_size, hidden_size, num_layers, output_size):
+        super(GRUStockModel, self).__init__()
+        self.hidden_size = hidden_size
+        self.num_layers = num_layers
+        self.gru = nn.GRU(input_size, hidden_size, num_layers, batch_first=True)
+        self.fc = nn.Linear(hidden_size, output_size)
+
+    def forward(self, x):
+        h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(x.device)
+        out, _ = self.gru(x, h0)
+        out = self.fc(out[:, -1, :])  # Take last time step output
+        return out
+
 # ✅ Define Parent Folder for Filings
 PARENT_FOLDER = "/Users/colbywang/Google Drive/我的云端硬盘/Advanced NLP/Assignments/data files/organized/"
 STOCK_DATA_FOLDER = os.path.join(PARENT_FOLDER, "stock-data")
@@ -242,6 +261,26 @@ if st.session_state.filing_date:
             # ✅ Load Selected Model
             if st.button("Load Model"):
                 st.session_state.selected_model = model_choice
+                device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+                if model_choice == "stock_gru_model.pth":
+                    if "model" not in st.session_state or st.session_state.selected_model != model_choice:
+                        model = GRUStockModel(input_size=7, hidden_size=64, num_layers=2, output_size=3).to(device)
+                        model.load_state_dict(torch.load("stock_gru_model.pth", map_location=device))
+                        model.eval()  # Set model to evaluation mode
+                        st.session_state.model = model  # Persist model in session state
+
+                else:  # Using Doc2Vec + GRU model
+                    if "doc2vec_model" not in st.session_state:
+                        st.session_state.doc2vec_model = Doc2Vec.load("sec_doc2vec.model")  # Persist Doc2Vec model
+                    embedding_dim = st.session_state.doc2vec_model.vector_size  # Get embedding size from Doc2Vec
+
+                    if "model" not in st.session_state or st.session_state.selected_model != model_choice:
+                        model = GRUStockModel(input_size=7 + embedding_dim, hidden_size=128, num_layers=2, output_size=3).to(device)
+                        model.load_state_dict(torch.load("stock_gru_d2v_final.pth", map_location=device))
+                        model.eval()  # Set model to evaluation mode
+                        st.session_state.model = model  # Persist model in session state
+
                 st.success(f"✅ Loaded Model: `{model_options[model_choice]}`")
 
             # ✅ Predict Using Model (if loaded)
