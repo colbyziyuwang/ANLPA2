@@ -15,6 +15,7 @@ import re
 import torch
 import torch.nn as nn
 from gensim.models.doc2vec import Doc2Vec
+import numpy as np
 
 # GRU Model Definition
 class GRUStockModel(nn.Module):
@@ -289,6 +290,42 @@ if st.session_state.filing_date:
 
                 # Placeholder for model inference logic
                 st.write("Model will take last 7 days of stock prices and predict the trend for the next day.")
+
+                df = pd.read_csv(stock_file_path, parse_dates=['Date'])
+                df.set_index('Date', inplace=True)
+
+                # ✅ Ensure filing_date exists in index
+                if filing_date not in df.index:
+                    st.error("Filing date not found in dataset!")
+                    st.stop()
+
+                # ✅ Ensure we get exactly the last 7 trading days
+                df_subset = df[df.index <= filing_date].tail(7)
+
+                # ✅ Select only the required features (ensure all exist)
+                features = ['Close', 'High', 'Low', 'Open', 'Volume', 'CPI', 'Inflation']
+                df_subset = df_subset[features]
+
+                # ✅ Ensure exactly 7 rows of data
+                if len(df_subset) < 7:
+                    st.error("Not enough historical data (7 days required)!")
+                    st.stop()
+
+                # ✅ Convert to numpy array for model input
+                X = df_subset.values.reshape(1, 7, -1)  # Shape: (1, 7, 7) for batch size 1
+                X = torch.tensor(X, dtype=torch.float32).to(device)
+
+                # ✅ Perform model prediction
+                with torch.no_grad():  # No gradient computation needed for inference
+                    output = st.session_state.model(X)
+                    _, predicted = torch.max(output, 1)  # Get class with highest probability
+
+                # ✅ Convert predicted label to human-readable text
+                class_mapping = {0: "📉 Down", 1: "🔄 Stable", 2: "📈 Up"}
+                prediction_label = class_mapping.get(predicted.item(), "❓ Unknown")
+
+                # ✅ Display the result
+                st.write(f"### 📊 Prediction Result: {prediction_label}")   
 
         else:
             st.error(f"❌ No stock data file found for CIK: {cik}.")
