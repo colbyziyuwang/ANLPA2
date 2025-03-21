@@ -255,7 +255,7 @@ if st.session_state.filing_date:
             st.write("### 🧠 Choose Prediction Model")
             model_options = {
                 "stock_gru_model.pth": "Stock GRU (No Embeddings)",
-                "stock_gru_d2v.pth": "Stock GRU + Doc2Vec Embeddings"
+                "stock_gru_d2v_final.pth": "Stock GRU + Doc2Vec Embeddings"
             }
             model_choice = st.selectbox("Select Model for Prediction:", list(model_options.keys()), format_func=lambda x: model_options[x])
 
@@ -313,6 +313,29 @@ if st.session_state.filing_date:
 
                 # ✅ Convert to numpy array for model input
                 X = df_subset.values.reshape(1, 7, -1)  # Shape: (1, 7, 7) for batch size 1
+                
+                if st.session_state.selected_model == "stock_gru_d2v_final.pth":
+                    doc2vec_model = Doc2Vec.load("sec_doc2vec.model")
+
+                    # Load and embed the filing text
+                    filing_path = st.session_state.file_path
+                    if filing_path and os.path.exists(filing_path):
+                        with open(filing_path, "r", encoding="utf-8") as f:
+                            text = f.read()
+                        filing_embedding = doc2vec_model.infer_vector(text.split())
+                    else:
+                        st.warning("⚠️ Filing document not found — using zero vector.")
+                        filing_embedding = np.zeros(doc2vec_model.vector_size)
+
+                    # Create an embedding matrix for 7 days: 6 zero vectors + 1 real embedding for the filing date
+                    embedding_sequence = np.zeros((7, doc2vec_model.vector_size), dtype=np.float32)
+                    embedding_sequence[-1] = filing_embedding  # Only the last timestep gets the real embedding
+
+                    # Concatenate stock features and filing embedding
+                    X = X[0]  # Shape: (7, 7)
+                    X = np.hstack((X, embedding_sequence))  # Shape becomes (7, 391)
+                    X = X.reshape(1, 7, -1)  # Final shape: (1, 7, 391)
+
                 X = torch.tensor(X, dtype=torch.float32).to(device)
 
                 # ✅ Perform model prediction
