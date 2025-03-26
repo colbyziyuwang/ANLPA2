@@ -62,19 +62,24 @@ st.write("This chatbot reads 10-K and DEF 14A filings so you don’t have to. As
 
 # ✅ Fun Character Picker
 st.write("#### 🎭 Pick a Character for Fun")
-character_name = st.text_input("Enter your character name:")
+
+# Fun character dictionary
+character_responses = {
+    "nezha": "Nezha: 我命由我不由天！(Translation: I control my own destiny, not the heavens!) 🚀 He YOLOs every trade. Risk? What risk?",
+    "tang seng": "Tang Seng: Very cautious. Prays three times before buying a stock. Would rather walk to the West than buy crypto. 🛐",
+    "elon musk": "Elon Musk: Tweets once, market moves twice. Loves AI, rockets, chaos. 🚀🚀🚀",
+    "spongebob": "Spongebob: Works for free and still smiles. Would buy meme stocks just for fun. 🧽",
+    "guo jing": "Guo Jing: Honest and loyal. Invests in blue-chip companies and holds for 10 years. Might ask Huang Rong for tips. 🐴",
+    "huang rong": "Huang Rong: Smart, cunning, always five steps ahead. Reads every 10-K before you even open your laptop. 📊",
+    "default": "Hmm... I don’t recognize that character. Must be trading in a parallel dimension. 🌌"
+}
+
+character_name = st.text_input("Enter your character name (e.g., NeZha, Tang Seng, etc.):")
+
 if st.button("Pick a Character"):
-    character_responses = {
-        "spongebob": "Spongebob: Works for free, like an unpaid intern. 🧽",
-        "patrick": "Patrick: Financial advice? 'Just don’t spend money.' Genius. 💰",
-        "nezha": "Nezha: 我命由我不由天！(Translation: I control my own destiny, not the heavens!)",
-        "elon musk": "Elon Musk: Likes rockets, AI, and tweeting at 3 AM. 🚀",
-        "batman": "Batman: He doesn’t read SEC filings—he **owns** the companies filing them. 😢",
-        "rick sanchez": "Rick Sanchez: '10-K filings? Pfft. Just invest in interdimensional markets, Morty!' 🤯",
-        "shrek": "Shrek: 'This chatbot is like an onion—it has layers. Also, I don’t do stocks, I do **swamps**.' 🧅",
-        "default": "Hmm... I don't know that character. Maybe they’re off trading crypto?"
-    }
-    st.write(character_responses.get(character_name.strip().lower(), character_responses["default"]))
+    character_key = character_name.strip().lower()
+    st.write(character_responses.get(character_key, character_responses["default"]))
+
 
 # ✅ Initialize Session State to Persist Data
 if "show_analysis" not in st.session_state:
