@@ -60,26 +60,87 @@ st.write("Welcome to the **SEC Filing Analysis RAG Chatbot**, where serious fina
 
 st.write("This chatbot reads 10-K and DEF 14A filings so you don’t have to. Ask it why a stock might go 🚀 or 📉 after reading financial statements.")
 
-# ✅ Fun Character Picker
-st.write("#### 🎭 Pick a Character for Fun")
-
-# Fun character dictionary
-character_responses = {
-    "nezha": "Nezha: 我命由我不由天！(Translation: I control my own destiny, not the heavens!) 🚀 He YOLOs every trade. Risk? What risk?",
-    "tang seng": "Tang Seng: Very cautious. Prays three times before buying a stock. Would rather walk to the West than buy crypto. 🛐",
-    "elon musk": "Elon Musk: Tweets once, market moves twice. Loves AI, rockets, chaos. 🚀🚀🚀",
-    "spongebob": "Spongebob: Works for free and still smiles. Would buy meme stocks just for fun. 🧽",
-    "guo jing": "Guo Jing: Honest and loyal. Invests in blue-chip companies and holds for 10 years. Might ask Huang Rong for tips. 🐴",
-    "huang rong": "Huang Rong: Smart, cunning, always five steps ahead. Reads every 10-K before you even open your laptop. 📊",
-    "default": "Hmm... I don’t recognize that character. Must be trading in a parallel dimension. 🌌"
+# Fun character dictionary with risk scores and descriptions
+character_profiles = {
+    "ne zha": {
+        "desc": (
+            "🚀 **Nezha: 我命由我不由天！(I control my own destiny, not the heavens!)\n"
+            "Goes all in on penny stocks, leverages 10x, and celebrates market crashes as buying opportunities. "
+            "Portfolio is 100% volatility and vibes.🔥**"
+        ),
+        "risk": 1.0,
+        "Decision": "Buy!!!!"
+    },
+    "tang seng": {
+        "desc": (
+            "🛐 **Tang Seng: The monk of money. Meditates before buying bonds**.\n"
+            "**Would rather fast for 7 days than risk 1\% drawdown. Only trusts GICs and government treasuries**.🙏"
+        ),
+        "risk": 0.0,
+        "Decision": "Not Buy!!!"
+    },
+    "elon musk": {
+        "desc": (
+            "🚀 **Elon Musk: Invents a stock, tweets it into the S&P500, and then sells it to buy Mars**.\n"
+            "**Believes in the future of everything—AI, crypto, tunneling, and flamethrowers**. 🧠🔥"
+        ),
+        "risk": 0.9,
+        "Decision": "Buy!!!!"
+    },
+    "spongebob": {
+        "desc": (
+            "🧽 **Spongebob: Just happy to be in the market.**\n"
+            "**Buys meme stocks, NFTs of jellyfish, and forgets his brokerage password daily**.\n "
+            "**Cheerfully bankrupt—but emotionally rich**. 🍍"
+        ),
+        "risk": 0.3,
+        "Decision": "Not Buy!!!"
+    },
+    "guo jing": {
+        "desc": (
+            "🐴 **Guo Jing**: Loyal, dependable, and too honest for Wall Street**.\n"
+            "**Holds index funds, follows Warren Buffett, and gets nervous if a stock moves ±1%**. "
+            "**Will always ask Huang Rong before making a trade**. 🏹"
+        ),
+        "risk": 0.4,
+        "Decision": "Hold!!!"
+    },
+    "huang rong": {
+        "desc": (
+            "📊 **Huang Rong: Financial ninja. Arbitrages market mispricings before the SEC even wakes up**.\n"
+            "**Reads all 300 pages of a 10-K filing for fun, and hacks algorithmic traders for breakfast**. 🧠💻"
+        ),
+        "risk": 0.7,
+        "Decision": "Hold!!!"
+    }
 }
 
-character_name = st.text_input("Enter your character name (e.g., NeZha, Tang Seng, etc.):")
+# Initialize session state
+if "picked_character" not in st.session_state:
+    st.session_state.picked_character = None
+
+st.write("#### 🎭 Pick a Character for Fun")
+character_name = st.text_input("Enter your character name:").strip().lower()
 
 if st.button("Pick a Character"):
-    character_key = character_name.strip().lower()
-    st.write(character_responses.get(character_key, character_responses["default"]))
+    if character_name in character_profiles:
+        st.session_state.picked_character = character_name
+    else:
+        st.session_state.picked_character = "default"
 
+# Display character description and risk if selected
+if st.session_state.picked_character and st.session_state.picked_character != "default":
+    char_info = character_profiles[st.session_state.picked_character]
+    st.markdown(char_info["desc"])
+    st.markdown(f"📈 **Risk Tolerance Score**: `{char_info['risk']}`")
+elif st.session_state.picked_character == "default":
+    st.write("🌌 Hmm... I don’t recognize that character. Probably trading meme coins in another universe.")
+
+if (st.session_state.picked_character and st.session_state.picked_character != "default"):
+    char_info = character_profiles[st.session_state.picked_character]
+    st.markdown(f"📊 **Decision**: `{char_info['Decision']}`")
+    if (char_info['Decision'] != "Hold!!!"):
+        st.stop()
 
 # ✅ Initialize Session State to Persist Data
 if "show_analysis" not in st.session_state:
