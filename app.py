@@ -289,7 +289,7 @@ if st.session_state.filing_date:
                 st.session_state.analyze_stock = True
 
             if st.session_state.analyze_stock:
-                st.write("We will plot the 7-day price of the stock starting from the filing date.")
+                st.write("We will plot the 8-day price of the stock ending at the day after filing.")
 
                 # ✅ Load CSV data
                 df = pd.read_csv(stock_file_path, parse_dates=['Date'])
@@ -306,13 +306,13 @@ if st.session_state.filing_date:
                     st.stop()
 
                 if filing_date in df.index:
-                    df_subset = df.loc[filing_date:filing_date + pd.Timedelta(days=6)]
+                    df_subset = df.loc[filing_date - pd.Timedelta(days=6): filing_date + pd.Timedelta(days=1)]
                     st.write("### 📈 Stock Price Trend")
                     fig, ax = plt.subplots()
                     ax.plot(df_subset.index, df_subset['Close'], marker='o', linestyle='-')
                     ax.set_xlabel("Date")
                     ax.set_ylabel("Stock Price (Close)")
-                    ax.set_title("7-Day Stock Price Trend")
+                    ax.set_title("8-Day Stock Price Trend")
                     st.pyplot(fig)
                 else:
                     st.error("Filing date not found in the dataset.")
