@@ -28,7 +28,7 @@ from utils import (
 set_seed(42)
 
 # ✅ Load pretrained Doc2Vec model
-doc2vec_model = Doc2Vec.load("sec_doc2vec.model")
+doc2vec_model = Doc2Vec.load("models/sec_doc2vec.model")
 embedding_dim = doc2vec_model.vector_size
 
 # ✅ Constants and Hyperparameters
