@@ -39,11 +39,7 @@ def switch_file_path(original_path: str) -> str:
         converted_path = original_path.replace(google_prefix, local_prefix)
         return converted_path
 
-    # Optionally: warn if file still doesn't exist
-    if not os.path.exists(original_path):
-        print(f"⚠️ Warning: File not found at {original_path}")
-
-    return original_path
+    return ""
 
 def create_labels(df, threshold, N):
     """
