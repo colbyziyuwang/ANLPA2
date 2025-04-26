@@ -40,7 +40,7 @@ class TransformerStockModel(nn.Module):
     def __init__(self, input_size, hidden_size, num_layers, output_size, nhead=4):
         super(TransformerStockModel, self).__init__()
         self.embedding = nn.Linear(input_size, hidden_size)
-        encoder_layer = nn.TransformerEncoderLayer(d_model=hidden_size, nhead=nhead)
+        encoder_layer = nn.TransformerEncoderLayer(d_model=hidden_size, nhead=nhead, batch_first=True)
         self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
         self.fc = nn.Linear(hidden_size, output_size)
 
