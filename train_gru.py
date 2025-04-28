@@ -23,8 +23,7 @@ set_seed(SEED)
 # NOTE: Modify this path based on your local or cloud environment.
 PARENT_FOLDER = "/Users/colbywang/Google Drive/我的云端硬盘/Advanced NLP/Assignments/data files/organized/stock-data"
 all_files = glob(os.path.join(PARENT_FOLDER, "*.csv"))
-MODEL_SAVE_PATH = "models/stock_gru_model.pth"
-LOSS_PLOT_PATH = "images/train_loss_gru.png"
+MODEL_SAVE_PATH = "models_ablation/stock_gru_model_thresh0.01.pth"
 
 # ✅ Hyperparameters
 sequence_length = 7  # Lookback window
@@ -34,7 +33,7 @@ epochs = 20
 hidden_size = 64
 num_layers = 2
 learning_rate = 0.001
-threshold = 0.02  # 2% threshold
+threshold = 0.01  # 1% threshold
 train_ratio = 0.7
 
 # ✅ Train-test split with fixed seed
@@ -97,18 +96,6 @@ for epoch in range(epochs):
     avg_loss = total_loss / len(train_loader)
     train_losses.append(avg_loss)
     print(f"Epoch {epoch+1} Loss: {avg_loss:.4f}")
-
-# ✅ Save loss plot
-plt.figure(figsize=(8, 5))
-plt.plot(train_losses, label="Training Loss")
-plt.xlabel("Epochs")
-plt.ylabel("Loss")
-plt.title("Training Loss Curve")
-plt.legend()
-plt.tight_layout()
-plt.savefig(LOSS_PLOT_PATH)
-plt.close()
-print(f"\n✅ Training loss plot saved to {LOSS_PLOT_PATH}")
 
 # ✅ Save model
 torch.save(model.state_dict(), MODEL_SAVE_PATH)
