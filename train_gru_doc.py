@@ -66,7 +66,7 @@ for epoch in range(epochs):
     total_loss = 0
 
     for file in tqdm(train_files, desc="Processing Training Files"):
-        if not os.path.isfile(file) or os.stat(file).st_size == 0:
+        if os.stat(file).st_size == 0:
             continue
 
         df = pd.read_csv(file)

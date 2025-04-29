@@ -1,0 +1,19 @@
+
+🔹 Overall Test Set Performance Metrics 🔹
+✅ Accuracy:  0.3750
+📏 Precision: 0.1406
+📡 Recall:    0.3750
+⚖️ F1-Score:  0.2046
+
+🔹 Per-Class Breakdown 🔹
+              precision    recall  f1-score   support
+
+      Stable       0.00      0.00      0.00    235385
+          Up       0.38      1.00      0.55    313030
+        Down       0.00      0.00      0.00    286320
+
+    accuracy                           0.38    834735
+   macro avg       0.13      0.33      0.18    834735
+weighted avg       0.14      0.38      0.20    834735
+
+✅ Confusion matrix saved to images_ablation/confusion_matrix_gru_threshold0.005.png

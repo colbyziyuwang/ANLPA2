@@ -10,7 +10,6 @@ from torch.utils.data import DataLoader, TensorDataset
 from sklearn.model_selection import train_test_split
 from glob import glob
 from tqdm import tqdm
-import matplotlib.pyplot as plt
 
 from gru_model import GRUStockModel
 from utils import set_seed, create_labels, create_sequences
@@ -23,7 +22,7 @@ set_seed(SEED)
 # NOTE: Modify this path based on your local or cloud environment.
 PARENT_FOLDER = "/Users/colbywang/Google Drive/我的云端硬盘/Advanced NLP/Assignments/data files/organized/stock-data"
 all_files = glob(os.path.join(PARENT_FOLDER, "*.csv"))
-MODEL_SAVE_PATH = "models_ablation/stock_gru_model_thresh0.01.pth"
+MODEL_SAVE_PATH = "models_ablation/stock_gru_model_threshold0.01.pth"
 
 # ✅ Hyperparameters
 sequence_length = 7  # Lookback window
@@ -33,7 +32,7 @@ epochs = 20
 hidden_size = 64
 num_layers = 2
 learning_rate = 0.001
-threshold = 0.01  # 1% threshold
+threshold = 0.01
 train_ratio = 0.7
 
 # ✅ Train-test split with fixed seed
@@ -69,7 +68,7 @@ train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 # ✅ Model and optimizer setup
 device = torch.device("mps" if torch.backends.mps.is_available() else ("cuda" if torch.cuda.is_available() else "cpu"))
 input_size = 7  # Number of features
-output_size = 3  # Up, Down, Stable
+output_size = 3  # Stable, Up, Down
 
 model = GRUStockModel(input_size, hidden_size, num_layers, output_size).to(device)
 criterion = nn.CrossEntropyLoss()
