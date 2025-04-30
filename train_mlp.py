@@ -1,4 +1,4 @@
-# train_gru.py
+# train_mlp.py
 
 import os
 import numpy as np
@@ -8,42 +8,41 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
 from sklearn.model_selection import train_test_split
+from sklearn.utils.class_weight import compute_class_weight
 from glob import glob
 from tqdm import tqdm
 
-from gru_model import GRUStockModel
 from utils import set_seed, create_labels, create_sequences
+from mlp_model import MLPStockModel
 
+# ✅ Device and seed
 device = torch.device("mps" if torch.backends.mps.is_available() else ("cuda" if torch.cuda.is_available() else "cpu"))
-
-# ✅ Set seed for reproducibility
 SEED = 42
 set_seed(SEED)
 
 # ✅ Paths
-# NOTE: Modify this path based on your local or cloud environment.
 PARENT_FOLDER = "/Users/colbywang/Google Drive/我的云端硬盘/Advanced NLP/Assignments/data files/organized/stock-data"
 all_files = glob(os.path.join(PARENT_FOLDER, "*.csv"))
-MODEL_SAVE_PATH = "models_ablation/stock_gru_model_hidden128.pth"
+MODEL_SAVE_PATH = "models/stock_mlp_model.pth"
 
 # ✅ Hyperparameters
-sequence_length = 7  # Lookback window
-N = 1  # Predict trend in next N days
+sequence_length = 7
+N = 1
 batch_size = 32
 epochs = 20
-hidden_size = 128
-num_layers = 2
 learning_rate = 0.001
 threshold = 0.02
 train_ratio = 0.7
+num_features = 7  # Number of features in the input
+input_size = num_features * sequence_length  # Flattened input for MLP
+hidden_dim = 128
+output_size = 3
 
-# ✅ Train-test split with fixed seed
-train_files, test_files = train_test_split(
-    all_files, test_size=1-train_ratio, random_state=SEED
-)
+# ✅ Split files
+train_files, test_files = train_test_split(all_files, test_size=1 - train_ratio, random_state=SEED)
 print(f"Training on {len(train_files)} stock files, Testing on {len(test_files)} stock files")
 
-# ✅ Load and preprocess all training stock data
+# ✅ Load training data
 all_X_train, all_y_train = [], []
 
 for file in tqdm(train_files, desc="Loading training files"):
@@ -55,41 +54,29 @@ for file in tqdm(train_files, desc="Loading training files"):
 
     labels = create_labels(df, threshold, N)
     X, y = create_sequences(df, labels, sequence_length, N)
-    all_X_train.append(X)
+    if len(X) == 0:
+        continue
+    X_flat = X.reshape(X.shape[0], -1)
+    all_X_train.append(X_flat)
     all_y_train.append(y)
 
-# ✅ Concatenate and convert to tensors
 X_train = np.concatenate(all_X_train, axis=0)
 y_train = np.concatenate(all_y_train, axis=0)
 
-from sklearn.utils.class_weight import compute_class_weight
-import torch
-
-# Suppose y_train is your training label array
-class_weights = compute_class_weight(
-    class_weight='balanced',
-    classes=np.array([0,1,2]),
-    y=y_train
-)
-
+# ✅ Class weights (optional)
+class_weights = compute_class_weight(class_weight='balanced', classes=np.array([0, 1, 2]), y=y_train)
 print(f"Class Weights: {class_weights}")
 class_weights = torch.tensor(class_weights, dtype=torch.float32).to(device)
 
-# Pass to criterion
-criterion = nn.CrossEntropyLoss()
-
-X_train_tensor = torch.tensor(X_train, dtype=torch.float32)
-y_train_tensor = torch.tensor(y_train, dtype=torch.long)
-
-train_dataset = TensorDataset(X_train_tensor, y_train_tensor)
+# ✅ Dataloader and tensors
+X_tensor = torch.tensor(X_train, dtype=torch.float32)
+y_tensor = torch.tensor(y_train, dtype=torch.long)
+train_dataset = TensorDataset(X_tensor, y_tensor)
 train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 
-# ✅ Model and optimizer setup
-input_size = 7  # Number of features
-output_size = 3  # Stable, Up, Down
-
-model = GRUStockModel(input_size, hidden_size, num_layers, output_size).to(device)
-# criterion = nn.CrossEntropyLoss()
+# ✅ Model setup
+model = MLPStockModel(input_size, hidden_dim, output_size).to(device)
+criterion = nn.CrossEntropyLoss(weight=class_weights)
 optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
 # ✅ Training loop
@@ -101,7 +88,7 @@ for epoch in range(epochs):
 
     for batch_X, batch_y in tqdm(train_loader, desc=f"Epoch {epoch+1}"):
         if torch.isnan(batch_X).any():
-            continue  # Skip NaN batches
+            continue
         batch_X, batch_y = batch_X.to(device), batch_y.to(device)
         optimizer.zero_grad()
         outputs = model(batch_X)

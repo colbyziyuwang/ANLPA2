@@ -20,10 +20,10 @@ sequence_length = 7  # Lookback window
 N = 1  # Predict trend in next N days
 batch_size = 32
 epochs = 20
-hidden_size = 64
+hidden_size = 128
 num_layers = 2
 learning_rate = 0.001
-threshold = 0.01
+threshold = 0.02
 train_ratio = 0.7
 input_size = 7  # Number of features
 output_size = 3  # Up, Down, Stable
@@ -45,7 +45,7 @@ train_files, test_files = train_test_split(
 # ✅ Load GRU Model
 device = torch.device("mps" if torch.backends.mps.is_available() else ("cuda" if torch.cuda.is_available() else "cpu"))
 model = GRUStockModel(input_size, hidden_size, num_layers, output_size).to(device)
-model.load_state_dict(torch.load("models_ablation/stock_gru_model_threshold0.01.pth"))
+model.load_state_dict(torch.load("models_ablation/stock_gru_model_hidden128.pth"))
 model.eval()
 
 # ✅ Metrics Storage
@@ -101,9 +101,9 @@ plt.figure(figsize=(6, 5))
 sns.heatmap(cm, annot=True, fmt='d', cmap="Blues", xticklabels=["Stable", "Up", "Down"], yticklabels=["Stable", "Up", "Down"])
 plt.xlabel("Predicted")
 plt.ylabel("Actual")
-plt.title("Confusion Matrix - GRU (Weighted Entropy Loss)")
+plt.title("Confusion Matrix - GRU (Hidden Size 128)")
 plt.tight_layout()
-plt.savefig("images_ablation/confusion_matrix_gru_threshold0.01.png")
+plt.savefig("images_ablation/confusion_matrix_gru_hidden128.png")
 plt.close()
 
-print("✅ Confusion matrix saved to images_ablation/confusion_matrix_gru_threshold0.01.png")
+print("✅ Confusion matrix saved to images_ablation/confusion_matrix_gru_hidden128.png")
