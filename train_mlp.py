@@ -28,14 +28,14 @@ MODEL_SAVE_PATH = "models/stock_mlp_model.pth"
 # ✅ Hyperparameters
 sequence_length = 7
 N = 1
-batch_size = 32
+batch_size = 128
 epochs = 20
 learning_rate = 0.001
 threshold = 0.02
 train_ratio = 0.7
 num_features = 7  # Number of features in the input
 input_size = num_features * sequence_length  # Flattened input for MLP
-hidden_dim = 128
+hidden_dim = 1024
 output_size = 3
 
 # ✅ Split files

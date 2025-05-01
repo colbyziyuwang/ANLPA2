@@ -8,11 +8,13 @@ class MLPStockModel(nn.Module):
         self.model = nn.Sequential(
             nn.Linear(input_size, hidden_size),
             nn.ReLU(),
-            nn.BatchNorm1d(hidden_size),
             nn.Linear(hidden_size, hidden_size // 2),
             nn.ReLU(),
-            nn.BatchNorm1d(hidden_size // 2),
-            nn.Linear(hidden_size // 2, output_size)
+            nn.Linear(hidden_size // 2, hidden_size // 4),
+            nn.ReLU(),
+            nn.Linear(hidden_size // 4, hidden_size // 8),
+            nn.ReLU(),
+            nn.Linear(hidden_size // 8, output_size)
         )
 
     def forward(self, x):

@@ -37,7 +37,7 @@ all_files = glob(os.path.join(PARENT_FOLDER, "*.csv"))
 train_files, test_files = train_test_split(all_files, test_size=1-train_ratio, random_state=SEED)
 
 # ✅ Load model
-model = MLPStockModel(input_size=input_size, hidden_size=128, output_size=output_size).to(device)
+model = MLPStockModel(input_size=input_size, hidden_size=1024, output_size=output_size).to(device)
 model.load_state_dict(torch.load(MODEL_PATH))
 model.eval()
 
