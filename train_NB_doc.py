@@ -3,21 +3,21 @@ import numpy as np
 import pandas as pd
 from glob import glob
 from tqdm import tqdm
-import torch
-from gensim.models.doc2vec import Doc2Vec
+from sklearn.naive_bayes import GaussianNB
 from sklearn.model_selection import train_test_split
+from gensim.models.doc2vec import Doc2Vec
+import joblib
+import gc
 
-from mlp_model import MLPStockModel
 from utils import set_seed, switch_file_path, create_labels, get_filing_embedding, create_sequences_d2v
 
-# ✅ Set seed and device
+# ✅ Set seed
 SEED = 42
 set_seed(SEED)
-device = torch.device("mps" if torch.backends.mps.is_available() else ("cuda" if torch.cuda.is_available() else "cpu"))
 
 # ✅ Paths
 PARENT_FOLDER = "/Users/colbywang/Google Drive/我的云端硬盘/Advanced NLP/Assignments/data files/organized/stock-data"
-MODEL_SAVE_PATH = "models/mlp_stock_doc2vec.pth"
+MODEL_SAVE_PATH = "models/gaussian_nb_stock_doc2vec.pkl"
 all_files = glob(os.path.join(PARENT_FOLDER, "*.csv"))
 
 # ✅ Hyperparameters
@@ -26,33 +26,26 @@ N = 1
 threshold = 0.005
 train_ratio = 0.7
 batch_size = 10
-learning_rate = 0.001
-epochs = 20
-hidden_size = 512
+classes = np.array([0, 1, 2])  # Required for first `partial_fit`
 
 # ✅ Load Doc2Vec model
 doc2vec_model = Doc2Vec.load("models/sec_doc2vec.model")
 embedding_dim = doc2vec_model.vector_size
-input_size = sequence_length * (7 + embedding_dim)
-output_size = 3
 
 # ✅ Split train/test files
 train_files, test_files = train_test_split(all_files, test_size=1 - train_ratio, random_state=SEED)
 print(f"Training on {len(train_files)} files, Testing on {len(test_files)} files")
 
-# ✅ Initialize model
-weights = torch.tensor([0.42798938, 2.9100811, 3.12636401], dtype=torch.float32).to(device)
-model = MLPStockModel(input_size=input_size, hidden_size=hidden_size, output_size=output_size).to(device)
-criterion = torch.nn.CrossEntropyLoss(weight=weights)
-optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+# ✅ Initialize GaussianNB model
+model = GaussianNB()
 
 # ✅ Batch training loop
 num_batches = len(train_files) // batch_size + int(len(train_files) % batch_size > 0)
-for batch_idx in tqdm(range(num_batches), desc="Training batches"):
-    X_train_all, y_train_all = [], []
-    files = train_files[batch_idx * batch_size:(batch_idx + 1) * batch_size]
+for i in tqdm(range(num_batches), desc="Training batches"):
+    X_batch_all, y_batch_all = [], []
+    batch_files = train_files[i * batch_size:(i + 1) * batch_size]
 
-    for file in files:
+    for file in batch_files:
         if os.stat(file).st_size == 0:
             continue
 
@@ -76,27 +69,35 @@ for batch_idx in tqdm(range(num_batches), desc="Training batches"):
             continue
 
         X_flat = X.reshape(X.shape[0], -1)
-        X_train_all.append(X_flat)
-        y_train_all.append(y)
+        X_batch_all.append(X_flat)
+        y_batch_all.append(y)
 
-    if len(X_train_all) == 0:
+    if len(X_batch_all) == 0:
         continue
 
-    X_train = torch.tensor(np.vstack(X_train_all), dtype=torch.float32).to(device)
-    y_train = torch.tensor(np.concatenate(y_train_all), dtype=torch.long).to(device)
+    X_train = np.vstack(X_batch_all)
+    y_train = np.concatenate(y_batch_all)
 
-    for _ in range(epochs):
-        model.train()
-        optimizer.zero_grad()
-        outputs = model(X_train)
-        loss = criterion(outputs, y_train)
-        loss.backward()
-        optimizer.step()
+    # ✅ Remove rows with NaNs
+    mask = ~np.isnan(X_train).any(axis=1)
+    dropped = np.sum(~mask)
+    if dropped > 0:
+        print(f"⚠️ Dropped {dropped} rows with NaNs in batch {i}")
+    X_train = X_train[mask]
+    y_train = y_train[mask]
 
-    del X_train_all, y_train_all, X_train, y_train
-    import gc
+    if len(X_train) == 0:
+        print(f"❌ Skipping batch {i} — no data left after NaN removal.")
+        continue
+
+    # ✅ Partial fit
+    if i == 0:
+        model.partial_fit(X_train, y_train, classes=classes)
+    else:
+        model.partial_fit(X_train, y_train)
+
+    joblib.dump(model, MODEL_SAVE_PATH)
+    print(f"✅ GaussianNB model saved to {MODEL_SAVE_PATH}")
+
+    del X_batch_all, y_batch_all, X_train, y_train
     gc.collect()
-
-    # ✅ Save model after each batch
-    torch.save(model.state_dict(), MODEL_SAVE_PATH)
-    print(f"✅ Model saved to {MODEL_SAVE_PATH}")

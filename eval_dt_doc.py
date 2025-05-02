@@ -1,9 +1,9 @@
 import os
-import torch
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-import numpy as np
+from glob import glob
 from tqdm import tqdm
 from sklearn.metrics import (
     accuracy_score,
@@ -13,23 +13,20 @@ from sklearn.metrics import (
 )
 from sklearn.model_selection import train_test_split
 from gensim.models.doc2vec import Doc2Vec
-from glob import glob
+import joblib
 
 from utils import set_seed, create_labels, create_sequences_d2v, get_filing_embedding, switch_file_path
-from mlp_model import MLPStockModel
 
 # ✅ Hyperparameters
 sequence_length = 7
 N = 1
-threshold = 0.005
+threshold = 0.02
 train_ratio = 0.7
-input_size = 7  # numeric features
 doc2vec_path = "models/sec_doc2vec.model"
-model_path = "models/mlp_stock_doc2vec.pth"
-conf_matrix_path = "images/confusion_matrix_mlp_doc2vec.png"
+model_path = "models/decision_tree_stock_doc2vec.pkl"
+conf_matrix_path = "images/confusion_matrix_dt_doc2vec.png"
 
-# ✅ Set device and seed
-device = torch.device("mps" if torch.backends.mps.is_available() else ("cuda" if torch.cuda.is_available() else "cpu"))
+# ✅ Set seed
 SEED = 42
 set_seed(SEED)
 
@@ -38,10 +35,8 @@ doc2vec_model = Doc2Vec.load(doc2vec_path)
 embedding_dim = doc2vec_model.vector_size
 full_input_dim = (7 + embedding_dim) * sequence_length
 
-# ✅ Load model
-model = MLPStockModel(input_size=full_input_dim, hidden_size=512, output_size=3).to(device)
-model.load_state_dict(torch.load(model_path, map_location=device))
-model.eval()
+# ✅ Load Decision Tree model
+clf = joblib.load(model_path)
 
 # ✅ Load test files
 PARENT_FOLDER = "/Users/colbywang/Google Drive/我的云端硬盘/Advanced NLP/Assignments/data files/organized/stock-data"
@@ -73,15 +68,10 @@ for test_file in tqdm(test_files, desc="Evaluating files"):
     if len(X) == 0:
         continue
 
-    X = X.reshape(X.shape[0], -1)
-    X_tensor = torch.tensor(X, dtype=torch.float32).to(device)
-    y_tensor = torch.tensor(y, dtype=torch.long).to(device)
-
-    with torch.no_grad():
-        outputs = model(X_tensor)
-        _, preds = torch.max(outputs, 1)
-        all_preds.extend(preds.cpu().numpy())
-        all_labels.extend(y_tensor.cpu().numpy())
+    X_flat = X.reshape(X.shape[0], -1)
+    preds = clf.predict(X_flat)
+    all_preds.extend(preds)
+    all_labels.extend(y)
 
 # ✅ Compute metrics
 accuracy = accuracy_score(all_labels, all_preds)
@@ -104,7 +94,7 @@ plt.figure(figsize=(6, 5))
 sns.heatmap(cm, annot=True, fmt='d', cmap="Blues", xticklabels=["Stable", "Up", "Down"], yticklabels=["Stable", "Up", "Down"])
 plt.xlabel("Predicted")
 plt.ylabel("Actual")
-plt.title("Confusion Matrix - MLP + Doc2Vec")
+plt.title("Confusion Matrix - Decision Tree + Doc2Vec")
 plt.tight_layout()
 plt.savefig(conf_matrix_path)
 plt.close()
