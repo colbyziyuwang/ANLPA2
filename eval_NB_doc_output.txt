@@ -1,19 +1,19 @@
 
 🔹 Overall Test Set Performance 🔹
-✅ Accuracy:  0.2824
-📏 Precision: 0.5043
-📡 Recall:    0.2824
-⚖️ F1-Score:  0.1256
+✅ Accuracy:  0.2841
+📏 Precision: 0.3570
+📡 Recall:    0.2841
+⚖️ F1-Score:  0.1324
 
 🔹 Per-Class Breakdown 🔹
               precision    recall  f1-score   support
 
-      Stable       0.28      1.00      0.44    235385
-          Up       0.40      0.00      0.00    313030
-        Down       0.80      0.00      0.00    286320
+      Stable       0.28      0.99      0.44    234741
+          Up       0.39      0.00      0.01    311754
+        Down       0.38      0.01      0.01    284836
 
-    accuracy                           0.28    834735
-   macro avg       0.49      0.33      0.15    834735
-weighted avg       0.50      0.28      0.13    834735
+    accuracy                           0.28    831331
+   macro avg       0.35      0.33      0.15    831331
+weighted avg       0.36      0.28      0.13    831331
 
 ✅ Confusion matrix saved to images/confusion_matrix_nb_doc2vec.png

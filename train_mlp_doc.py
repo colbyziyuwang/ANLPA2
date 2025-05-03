@@ -21,14 +21,14 @@ MODEL_SAVE_PATH = "models/mlp_stock_doc2vec.pth"
 all_files = glob(os.path.join(PARENT_FOLDER, "*.csv"))
 
 # ✅ Hyperparameters
-sequence_length = 7
+sequence_length = 30
 N = 1
 threshold = 0.005
 train_ratio = 0.7
 batch_size = 10
 learning_rate = 0.001
 epochs = 20
-hidden_size = 512
+hidden_size = 1024
 
 # ✅ Load Doc2Vec model
 doc2vec_model = Doc2Vec.load("models/sec_doc2vec.model")
@@ -41,9 +41,8 @@ train_files, test_files = train_test_split(all_files, test_size=1 - train_ratio,
 print(f"Training on {len(train_files)} files, Testing on {len(test_files)} files")
 
 # ✅ Initialize model
-weights = torch.tensor([0.42798938, 2.9100811, 3.12636401], dtype=torch.float32).to(device)
 model = MLPStockModel(input_size=input_size, hidden_size=hidden_size, output_size=output_size).to(device)
-criterion = torch.nn.CrossEntropyLoss(weight=weights)
+criterion = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
 # ✅ Batch training loop

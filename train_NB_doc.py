@@ -11,6 +11,19 @@ import gc
 
 from utils import set_seed, switch_file_path, create_labels, get_filing_embedding, create_sequences_d2v
 
+from sklearn.utils import resample
+
+def balance_classes(X, y, seed=42):
+    X_new, y_new = [], []
+    for cls in np.unique(y):
+        X_cls = X[y == cls]
+        y_cls = y[y == cls]
+        n_samples = max(np.bincount(y))  # oversample to majority
+        X_res, y_res = resample(X_cls, y_cls, replace=True, n_samples=n_samples, random_state=seed)
+        X_new.append(X_res)
+        y_new.append(y_res)
+    return np.vstack(X_new), np.concatenate(y_new)
+
 # ✅ Set seed
 SEED = 42
 set_seed(SEED)
@@ -21,7 +34,7 @@ MODEL_SAVE_PATH = "models/gaussian_nb_stock_doc2vec.pkl"
 all_files = glob(os.path.join(PARENT_FOLDER, "*.csv"))
 
 # ✅ Hyperparameters
-sequence_length = 7
+sequence_length = 30
 N = 1
 threshold = 0.005
 train_ratio = 0.7
@@ -91,6 +104,8 @@ for i in tqdm(range(num_batches), desc="Training batches"):
         continue
 
     # ✅ Partial fit
+    X_train, y_train = balance_classes(X_train, y_train)
+
     if i == 0:
         model.partial_fit(X_train, y_train, classes=classes)
     else:

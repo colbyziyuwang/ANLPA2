@@ -1,19 +1,19 @@
 
 🔹 Overall Test Set Performance Metrics 🔹
-✅ Accuracy:  0.7604
-📏 Precision: 0.5782
-📡 Recall:    0.7604
-⚖️ F1-Score:  0.6569
+✅ Accuracy:  0.4280
+📏 Precision: 0.1832
+📡 Recall:    0.4280
+⚖️ F1-Score:  0.2565
 
 🔹 Per-Class Breakdown 🔹
               precision    recall  f1-score   support
 
-      Stable       0.76      1.00      0.86    634752
-          Up       0.00      0.00      0.00    103496
-        Down       0.00      0.00      0.00     96487
+      Stable       0.43      1.00      0.60    355791
+          Up       0.00      0.00      0.00    234777
+        Down       0.00      0.00      0.00    240763
 
-    accuracy                           0.76    834735
-   macro avg       0.25      0.33      0.29    834735
-weighted avg       0.58      0.76      0.66    834735
+    accuracy                           0.43    831331
+   macro avg       0.14      0.33      0.20    831331
+weighted avg       0.18      0.43      0.26    831331
 
 ✅ Confusion matrix saved to images/confusion_matrix_mlp.png

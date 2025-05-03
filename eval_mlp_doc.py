@@ -19,7 +19,7 @@ from utils import set_seed, create_labels, create_sequences_d2v, get_filing_embe
 from mlp_model import MLPStockModel
 
 # ✅ Hyperparameters
-sequence_length = 7
+sequence_length = 30
 N = 1
 threshold = 0.005
 train_ratio = 0.7
@@ -27,6 +27,8 @@ input_size = 7  # numeric features
 doc2vec_path = "models/sec_doc2vec.model"
 model_path = "models/mlp_stock_doc2vec.pth"
 conf_matrix_path = "images/confusion_matrix_mlp_doc2vec.png"
+hidden_size = 1024
+output_size = 3
 
 # ✅ Set device and seed
 device = torch.device("mps" if torch.backends.mps.is_available() else ("cuda" if torch.cuda.is_available() else "cpu"))
@@ -39,7 +41,7 @@ embedding_dim = doc2vec_model.vector_size
 full_input_dim = (7 + embedding_dim) * sequence_length
 
 # ✅ Load model
-model = MLPStockModel(input_size=full_input_dim, hidden_size=512, output_size=3).to(device)
+model = MLPStockModel(input_size=full_input_dim, hidden_size=hidden_size, output_size=output_size).to(device)
 model.load_state_dict(torch.load(model_path, map_location=device))
 model.eval()
 

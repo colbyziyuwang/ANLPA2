@@ -8,12 +8,12 @@
 🔹 Per-Class Breakdown 🔹
               precision    recall  f1-score   support
 
-      Stable       0.00      0.00      0.00    235385
-          Up       0.38      1.00      0.55    313030
-        Down       0.00      0.00      0.00    286320
+      Stable       0.00      0.00      0.00    234741
+          Up       0.38      1.00      0.55    311754
+        Down       0.00      0.00      0.00    284836
 
-    accuracy                           0.38    834735
-   macro avg       0.13      0.33      0.18    834735
-weighted avg       0.14      0.38      0.20    834735
+    accuracy                           0.38    831331
+   macro avg       0.13      0.33      0.18    831331
+weighted avg       0.14      0.38      0.20    831331
 
 ✅ Confusion matrix saved to images/confusion_matrix_mlp_doc2vec.png

@@ -19,7 +19,7 @@ import joblib
 from utils import set_seed, create_labels, create_sequences_d2v, get_filing_embedding, switch_file_path
 
 # ✅ Hyperparameters
-sequence_length = 7
+sequence_length = 30
 N = 1
 threshold = 0.005
 train_ratio = 0.7

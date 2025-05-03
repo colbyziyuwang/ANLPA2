@@ -1,106 +1,117 @@
-# train_mlp.py
-
 import os
 import numpy as np
 import pandas as pd
-import torch
-import torch.nn as nn
-import torch.optim as optim
-from torch.utils.data import DataLoader, TensorDataset
-from sklearn.model_selection import train_test_split
-from sklearn.utils.class_weight import compute_class_weight
 from glob import glob
 from tqdm import tqdm
+import torch
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+import joblib
 
-from utils import set_seed, create_labels, create_sequences
 from mlp_model import MLPStockModel
+from utils import set_seed, switch_file_path, create_labels, create_sequences
 
-# ✅ Device and seed
-device = torch.device("mps" if torch.backends.mps.is_available() else ("cuda" if torch.cuda.is_available() else "cpu"))
+# ✅ Set seed and device
 SEED = 42
 set_seed(SEED)
+device = torch.device("mps" if torch.backends.mps.is_available() else ("cuda" if torch.cuda.is_available() else "cpu"))
 
 # ✅ Paths
 PARENT_FOLDER = "/Users/colbywang/Google Drive/我的云端硬盘/Advanced NLP/Assignments/data files/organized/stock-data"
+MODEL_SAVE_PATH = "models/mlp_stock_numeric.pth"
+SCALER_SAVE_PATH = "models/scaler.pkl"
 all_files = glob(os.path.join(PARENT_FOLDER, "*.csv"))
-MODEL_SAVE_PATH = "models/stock_mlp_model.pth"
 
 # ✅ Hyperparameters
-sequence_length = 7
+sequence_length = 30
 N = 1
-batch_size = 128
-epochs = 20
-learning_rate = 0.001
-threshold = 0.02
+threshold = 0.005
 train_ratio = 0.7
-num_features = 7  # Number of features in the input
-input_size = num_features * sequence_length  # Flattened input for MLP
-hidden_dim = 1024
+batch_size = 64
+learning_rate = 1e-4
+epochs = 20
+hidden_size = 256
+num_features = 7
+input_size = sequence_length * num_features
 output_size = 3
 
-# ✅ Split files
+# ✅ Split data
 train_files, test_files = train_test_split(all_files, test_size=1 - train_ratio, random_state=SEED)
-print(f"Training on {len(train_files)} stock files, Testing on {len(test_files)} stock files")
+print(f"Training on {len(train_files)} files, Testing on {len(test_files)} files")
 
-# ✅ Load training data
-all_X_train, all_y_train = [], []
+# ✅ Collect all training data for scaler
+scaler = StandardScaler()
+raw_data = []
 
-for file in tqdm(train_files, desc="Loading training files"):
+for file in train_files:
     if os.stat(file).st_size == 0:
         continue
     df = pd.read_csv(file)
-    if not {'Close', 'High', 'Low', 'Open', 'Volume', 'CPI', 'Inflation'}.issubset(df.columns):
-        continue
+    required_cols = ['Close', 'High', 'Low', 'Open', 'Volume', 'CPI', 'Inflation']
+    if set(required_cols).issubset(df.columns):
+        raw_data.append(df[required_cols])
 
-    labels = create_labels(df, threshold, N)
-    X, y = create_sequences(df, labels, sequence_length, N)
-    if len(X) == 0:
-        continue
-    X_flat = X.reshape(X.shape[0], -1)
-    all_X_train.append(X_flat)
-    all_y_train.append(y)
+scaler.fit(pd.concat(raw_data, axis=0))
+joblib.dump(scaler, SCALER_SAVE_PATH)
+print(f"📊 Scaler saved to {SCALER_SAVE_PATH}")
 
-X_train = np.concatenate(all_X_train, axis=0)
-y_train = np.concatenate(all_y_train, axis=0)
+# ✅ Initialize model
+model = MLPStockModel(input_size=input_size, hidden_size=hidden_size, output_size=output_size).to(device)
+criterion = torch.nn.CrossEntropyLoss()
+optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=1e-5)
 
-# ✅ Class weights (optional)
-class_weights = compute_class_weight(class_weight='balanced', classes=np.array([0, 1, 2]), y=y_train)
-print(f"Class Weights: {class_weights}")
-class_weights = torch.tensor(class_weights, dtype=torch.float32).to(device)
+# ✅ Organize batches
+num_batches = len(train_files) // batch_size + int(len(train_files) % batch_size > 0)
 
-# ✅ Dataloader and tensors
-X_tensor = torch.tensor(X_train, dtype=torch.float32)
-y_tensor = torch.tensor(y_train, dtype=torch.long)
-train_dataset = TensorDataset(X_tensor, y_tensor)
-train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-
-# ✅ Model setup
-model = MLPStockModel(input_size, hidden_dim, output_size).to(device)
-criterion = nn.CrossEntropyLoss(weight=class_weights)
-optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-
-# ✅ Training loop
-train_losses = []
+# ✅ Epoch-level training
 for epoch in range(epochs):
-    print(f"\nEpoch {epoch+1}/{epochs}")
-    model.train()
-    total_loss = 0
+    print(f"\n📚 Epoch {epoch + 1}/{epochs}")
+    epoch_loss = 0.0
 
-    for batch_X, batch_y in tqdm(train_loader, desc=f"Epoch {epoch+1}"):
-        if torch.isnan(batch_X).any():
+    for batch_idx in tqdm(range(num_batches), desc=f"Epoch {epoch + 1}"):
+        X_batch_all, y_batch_all = [], []
+        files = train_files[batch_idx * batch_size:(batch_idx + 1) * batch_size]
+
+        for file in files:
+            if os.stat(file).st_size == 0:
+                continue
+
+            df = pd.read_csv(file)
+            required_cols = ['Close', 'High', 'Low', 'Open', 'Volume', 'CPI', 'Inflation']
+            if not set(required_cols).issubset(df.columns):
+                continue
+
+            df = df[required_cols]
+            df = pd.DataFrame(scaler.transform(df), columns=required_cols)
+            labels = create_labels(df, threshold, N)
+
+            X, y = create_sequences(df, labels, sequence_length, N)
+            if len(X) == 0:
+                continue
+
+            X_flat = X.reshape(X.shape[0], -1)
+            X_batch_all.append(X_flat)
+            y_batch_all.append(y)
+
+        if len(X_batch_all) == 0:
             continue
-        batch_X, batch_y = batch_X.to(device), batch_y.to(device)
+
+        X_train = torch.tensor(np.vstack(X_batch_all), dtype=torch.float32).to(device)
+        y_train = torch.tensor(np.concatenate(y_batch_all), dtype=torch.long).to(device)
+
+        model.train()
         optimizer.zero_grad()
-        outputs = model(batch_X)
-        loss = criterion(outputs, batch_y)
+        outputs = model(X_train)
+        loss = criterion(outputs, y_train)
         loss.backward()
         optimizer.step()
-        total_loss += loss.item()
 
-    avg_loss = total_loss / len(train_loader)
-    train_losses.append(avg_loss)
-    print(f"Epoch {epoch+1} Loss: {avg_loss:.4f}")
+        epoch_loss += loss.item()
 
-# ✅ Save model
-torch.save(model.state_dict(), MODEL_SAVE_PATH)
-print(f"✅ Model saved to {MODEL_SAVE_PATH}")
+        del X_batch_all, y_batch_all, X_train, y_train
+        import gc
+        gc.collect()
+
+    print(f"✅ Epoch {epoch + 1} avg loss: {epoch_loss / num_batches:.4f}")
+    torch.save(model.state_dict(), MODEL_SAVE_PATH)
+    print(f"💾 Model saved to {MODEL_SAVE_PATH}")
