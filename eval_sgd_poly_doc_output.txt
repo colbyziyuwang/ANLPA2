@@ -1,0 +1,19 @@
+
+🔹 Overall Test Set Performance 🔹
+✅ Accuracy:  0.3436
+📏 Precision: 0.3384
+📡 Recall:    0.3436
+⚖️ F1-Score:  0.3140
+
+🔹 Per-Class Breakdown 🔹
+              precision    recall  f1-score   support
+
+      Stable       0.28      0.13      0.17    234741
+          Up       0.38      0.25      0.30    311754
+        Down       0.34      0.62      0.44    284836
+
+    accuracy                           0.34    831331
+   macro avg       0.33      0.33      0.31    831331
+weighted avg       0.34      0.34      0.31    831331
+
+✅ Confusion matrix saved to images/confusion_matrix_sgd_poly_doc2vec.png

@@ -1,0 +1,19 @@
+
+🔹 Overall Evaluation Metrics:
+✅ Accuracy: 0.7601
+📏 Precision: 0.6844
+📡 Recall: 0.7601
+⚖️ F1 Score: 0.6600
+
+📊 Classification Report:
+              precision    recall  f1-score   support
+
+      Stable       0.76      1.00      0.86    634752
+          Up       0.55      0.00      0.00    103496
+        Down       0.32      0.01      0.02     96487
+
+    accuracy                           0.76    834735
+   macro avg       0.54      0.34      0.30    834735
+weighted avg       0.68      0.76      0.66    834735
+
+📊 Confusion matrix saved to images/conf_matrix_decision_tree.png
